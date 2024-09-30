@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ blog.title }}</title>
+</head>
+<body>
+    <h1>{{ blog.title }}</h1>
+    <p>{{ blog.content }}</p>
+
+    <h2>Comments</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <textarea name="comment" required></textarea>
+        <button type="submit">Add Comment</button>
+    </form>
+
+    <ul>
+        {% for comment in comments %}
+        
+            <li>
+                {{ comment.user.username }}: {{ comment.comment }}
+                <form method="POST" action="{% url 'like_comment' comment.id %}">
+                    {% csrf_token %}
+                    <button type="submit">
+                        {% if comment.isLiked %}
+                            Unlike
+                        {% else %}
+                            Like
+                        {% endif %}
+                    </button>
+                </form>
+            </li>
+        {% empty %}
+            <li>No comments yet.</li>
+        {% endfor %}
+    </ul>
+    <h2>Share this Blog</h2>
+<form method="POST" action="{% url 'share_blog' blog.id %}">
+    {% csrf_token %}
+    <input type="email" name="recipient_email" placeholder="Recipient's email" required>
+    <button type="submit">Share via Email</button>
+</form>
+    <a href="{% url 'home' %}">Back to Blogs</a>
+</body>
+</html>
