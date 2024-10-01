@@ -17,17 +17,13 @@ from django.core.paginator import Paginator
 
 def login(request):
   if request.method=="GET":
-
        return render(request,'login.html')
        
   else:
         username=request.POST['username']
-       
         password=request.POST['password']
-
         try:
             if '@' in username:
-               
                 user=auth.authenticate(email=username,password=password)
             else:
                 user=auth.authenticate(username=username,password=password)
@@ -48,14 +44,9 @@ def Signup(request):
   if request.method=='GET':
         return render(request,'signup.html')
   else:
-       
         username =request.POST['username']
         email=request.POST['email']
-        password=request.POST['password']    
-         
-
-       
-        
+        password=request.POST['password']          
         if User.objects.filter(email=email) and not User.objects.filter(username=username):
 
             messages.warning(request,'email already exists')
@@ -74,12 +65,9 @@ def Signup(request):
       
 def blogs_listing(request):
     blogs = Blogs.objects.all()
-    
-   
     search_query = request.GET.get('search', '')
     print('search ',search_query)
     if search_query:
-        
            blogs = blogs.filter(
             Q(title__icontains=search_query) | 
             Q(blogtags__tag__tag_name__icontains=search_query)
@@ -87,7 +75,6 @@ def blogs_listing(request):
     paginator = Paginator(blogs, 5) 
     page_number = request.GET.get('page', 1)
     page_blogs = paginator.get_page(page_number)
-
     return render(request, 'blogs.html', {'blogs': page_blogs, 'search_query': search_query})
 
 
@@ -101,16 +88,11 @@ def blog_detail(request, id):
             'user':comment.user,
             'comment':comment.comment,
         }
-
         if BlogCommentLikes.objects.filter(comment_id=comment.id,user=request.user).exists():
             comments_detail['isLiked']=True
         else:
             comments_detail['isLiked']=False
-        all_comments.append(comments_detail)
-            
-    print(all_comments)
-    
-        
+        all_comments.append(comments_detail)    
     if request.method == 'POST':
         comment_content = request.POST['comment']
         if request.user.is_authenticated:
@@ -119,18 +101,16 @@ def blog_detail(request, id):
         else:
             messages.warning(request, 'You need to log in to comment.')
         return redirect('blog_detail', id=id)
-
     return render(request, 'blog_detail.html', {'blog': blog, 'comments': all_comments})
 
-# Like functionality for comments
+
 @login_required
 def like_comment(request, comment_id):
     comment=BlogComments.objects.get(id=comment_id)
     if not BlogCommentLikes.objects.filter(comment=comment,user=request.user).exists():
         BlogCommentLikes.objects.create(comment=comment,user=request.user)
         comment.likes_count+=1
-        comment.save()
-        
+        comment.save()   
     else:
         BlogCommentLikes.objects.filter(comment=comment,user=request.user).delete()
         comment.likes_count-=1
@@ -138,23 +118,17 @@ def like_comment(request, comment_id):
     return redirect('blog_detail', id=comment.blog.id)
 
 
-
-
 def share_blog(request, blog_id):
     blog = Blogs.objects.get(id=blog_id)
-
     if request.method == 'POST':
         recipient_email = request.POST['recipient_email']
         subject = f"Check out this blog: {blog.title}"
         message = f"Hi,\n\nI thought you might be interested in this blog:\n\n{blog.title}\n\n{blog.content}\n\nCheck it out!"
         from_email = 'example@gmail.com'  
-
         try:
             send_mail(subject, message, from_email, [recipient_email])
             print("successfully shared")
             messages.success(request, 'Blog shared successfully!')
-        except Exception as e:
-            
+        except Exception as e: 
             messages.error(request, f"Error sharing blog: {str(e)}")
-        
         return redirect('blog_detail', id=blog_id)
